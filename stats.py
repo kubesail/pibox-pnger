@@ -80,6 +80,7 @@ public_ip = 'No internet!'
 
 def get_public_ip():
     global public_ip
+    print("Fetching public IP")
     try:
         public_ip = json.loads(requests.get('https://api.kubesail.com/whatsmyip', timeout=3).content.decode("utf-8")).ip
     except:
@@ -94,8 +95,7 @@ def draw_screen():
 
     # Shell scripts for system monitoring from here:
     # https://unix.stackexchange.com/questions/119126/command-to-display-memory-usage-disk-usage-and-cpu-load
-    cmd = "hostname -I | cut -d' ' -f1"
-    IP = subprocess.check_output(cmd, shell=True).decode("utf-8")
+    IP = subprocess.check_output("hostname -I | cut -d' ' -f1", shell=True).decode("utf-8")
     # cmd = "top -bn1 | grep load | awk '{printf \"CPU %.0f%\", $(NF-2)}'"
     cmd = "top -bn1 | grep \"Cpu(s)\" | sed \"s/.*, *\([0-9.]*\)%* id.*/\\1/\" | awk '{print 100 - $1\"%\"}'"
     CPU = subprocess.check_output(cmd, shell=True).decode("utf-8")
@@ -105,21 +105,26 @@ def draw_screen():
     Disk = subprocess.check_output(cmd, shell=True).decode("utf-8")
     cmd = 'df -h | awk \'$NF=="/"{printf "%s", $5}\''
     DiskPct = subprocess.check_output(cmd, shell=True).decode("utf-8")
-    cmd = "cat /sys/class/thermal/thermal_zone0/temp |  awk '{printf \"CPU Temp: %.1f C\", $(NF-0) / 1000}'"  # pylint: disable=line-too-long
-    Temp = subprocess.check_output(cmd, shell=True).decode("utf-8")
-
+    # cmd = "cat /sys/class/thermal/thermal_zone0/temp |  awk '{printf \"CPU Temp: %.1f C\", $(NF-0) / 1000}'"  # pylint: disable=line-too-long
+    # Temp = subprocess.check_output(cmd, shell=True).decode("utf-8")
 
     y = 0
-    #draw.text((x, y), IP, font=font, fill="#FFFFFF")
 
-    cpuChart = requests.get(prometheusPngUrl + '?g0.expr=avg(rate(node_cpu_seconds_total%7Bmode%3D%22user%22%7D%5B5m%5D))&from=-30m&width=250&height=50&hideLegend=true&hideYAxis=true&hideXAxis=true&yDivisors=1&margin=0&hideGrid=true&graphOnly=true')
+    cpuChart = requests.get(prometheusPngUrl + '?g0.expr=avg(rate(node_cpu_seconds_total%7Bmode%3D%22user%22%7D%5B5m%5D))&from=-30m&width=250&height=50&hideLegend=true&hideYAxis=true&hideXAxis=true&yDivisors=1&margin=0&hideGrid=true&graphOnly=true', timeout=3)
+    if cpuChart.status_code != requests.codes.ok:
+        print("Unexpected status code from Prometheus-png: ", cpuChart.status_code, "\nContent: ", cpuChart.content)
+        return
     cpu = Image.open(io.BytesIO(cpuChart.content)).convert('RGB')
     y += fontsmall.getsize(CPU)[1]
     image.paste(cpu, (-10, 20))
     draw.text((0, 10), "CPU " + CPU, font=fontsmall, fill="#FFFF00")
     y += 80
 
-    memChart = requests.get(prometheusPngUrl + '?g0.expr=%28avg_over_time%28node_memory_MemFree_bytes%5B5m%5D%29%20%2F%20avg_over_time%28node_memory_MemTotal_bytes%5B5m%5D%29%29%20%2A%20100&from=-30m&width=250&height=50&hideLegend=true&hideYAxis=true&hideXAxis=true&yDivisors=1&margin=0&hideGrid=true&graphOnly=true')
+    memChart = requests.get(prometheusPngUrl + '?g0.expr=%28avg_over_time%28node_memory_MemFree_bytes%5B5m%5D%29%20%2F%20avg_over_time%28node_memory_MemTotal_bytes%5B5m%5D%29%29%20%2A%20100&from=-30m&width=250&height=50&hideLegend=true&hideYAxis=true&hideXAxis=true&yDivisors=1&margin=0&hideGrid=true&graphOnly=true', timeout=3)
+    if memChart.status_code != requests.codes.ok:
+        print("Unexpected status code from Prometheus-png: ", memChart.status_code, "\nContent: ", memChart.content)
+        return
+
     mem = Image.open(io.BytesIO(memChart.content)).convert('RGB')
     y += fontsmall.getsize(MemUsage)[1]
     image.paste(mem, (-10, 90))
@@ -138,9 +143,10 @@ def draw_screen():
     # Display image.
     disp.image(image, rotation, 0,0)
 
+print("Starting pibox-pnger")
 while True:
     try:
         draw_screen()
     except:
         print("Unexpected error:", sys.exc_info()[0])
-    time.sleep(2)
+    time.sleep(3)
