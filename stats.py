@@ -5,6 +5,7 @@
 
 import sys
 import io
+import os
 import time
 import subprocess
 import digitalio
@@ -13,6 +14,8 @@ import requests
 from PIL import Image, ImageDraw, ImageFont
 import adafruit_rgb_display.st7789 as st7789
 import adafruit_rgb_display.rgb as rgb
+
+prometheusPngUrl = os.environ['PROMETHEUS_PNG_URL'] or "http://localhost:8080"
 
 # Configuration for CS and DC pins (these are FeatherWing defaults on M0/M4):
 cs_pin = digitalio.DigitalInOut(board.CE1)
@@ -104,18 +107,18 @@ def draw_screen():
     cmd = "cat /sys/class/thermal/thermal_zone0/temp |  awk '{printf \"CPU Temp: %.1f C\", $(NF-0) / 1000}'"  # pylint: disable=line-too-long
     Temp = subprocess.check_output(cmd, shell=True).decode("utf-8")
 
-    
+
     y = 0
     #draw.text((x, y), IP, font=font, fill="#FFFFFF")
-   
-    cpuChart = requests.get('http://localhost:8080?g0.expr=avg(rate(node_cpu_seconds_total%7Bmode%3D%22user%22%7D%5B5m%5D))&from=-30m&width=250&height=50&hideLegend= true&hideYAxis=true&hideXAxis=true&yDivisors=1&margin=0&hideGrid=true&graphOnly=true')
+
+    cpuChart = requests.get(prometheusPngUrl + '?g0.expr=avg(rate(node_cpu_seconds_total%7Bmode%3D%22user%22%7D%5B5m%5D))&from=-30m&width=250&height=50&hideLegend= true&hideYAxis=true&hideXAxis=true&yDivisors=1&margin=0&hideGrid=true&graphOnly=true')
     cpu = Image.open(io.BytesIO(cpuChart.content)).convert('RGB')
     y += fontsmall.getsize(CPU)[1]
     image.paste(cpu, (-10, 20))
     draw.text((0, 10), "CPU " + CPU, font=fontsmall, fill="#FFFF00")
     y += 80
 
-    memChart = requests.get('http://localhost:8080?g0.expr=%28avg_over_time%28node_memory_MemFree_bytes%5B5m%5D%29%20%2F%20avg_over_time%28node_memory_MemTotal_bytes%5B5m%5D%29%29%20%2A%20100&from=-30m&width=250&height=50&hideLegend=true&hideYAxis=true&hideXAxis=true&yDivisors=1&margin=0&hideGrid=true&graphOnly=true')
+    memChart = requests.get(prometheusPngUrl + '?g0.expr=%28avg_over_time%28node_memory_MemFree_bytes%5B5m%5D%29%20%2F%20avg_over_time%28node_memory_MemTotal_bytes%5B5m%5D%29%29%20%2A%20100&from=-30m&width=250&height=50&hideLegend=true&hideYAxis=true&hideXAxis=true&yDivisors=1&margin=0&hideGrid=true&graphOnly=true')
     mem = Image.open(io.BytesIO(memChart.content)).convert('RGB')
     y += fontsmall.getsize(MemUsage)[1]
     image.paste(mem, (-10, 90))
