@@ -74,7 +74,10 @@ public_ip = 'No internet!'
 
 def get_public_ip():
     global public_ip
-    public_ip = requests.get('https://icanhazip.com', timeout=3).content.decode("utf-8")
+    try:
+        public_ip = requests.get('https://api.kubesail.com/whatsmyip', timeout=3).content.decode("utf-8")
+    except:
+        public_ip = ''
 
 # TODO: Call this every few minutes
 get_public_ip()
