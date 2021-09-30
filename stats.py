@@ -83,7 +83,7 @@ def get_public_ip():
 # TODO: Call this every few minutes
 get_public_ip()
 
-while True:
+def draw_screen():
     # Draw a black filled box to clear the image.
     draw.rectangle((0, 0, width, height), outline=0, fill=(23, 24, 25))
 
@@ -132,5 +132,10 @@ while True:
 
     # Display image.
     disp.image(image, rotation, 0,0)
-    time.sleep(2)
 
+while True:
+    try:
+        draw_screen()
+    except:
+        print("Unexpected error:", sys.exc_info()[0])
+    time.sleep(2)
