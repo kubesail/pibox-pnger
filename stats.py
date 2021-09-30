@@ -85,6 +85,7 @@ def get_public_ip():
         public_ip = json.loads(requests.get('https://api.kubesail.com/whatsmyip', timeout=3).content.decode("utf-8")).ip
     except:
         public_ip = 'No internet!'
+        print("get_public_ip error:", sys.exc_info()[0])
 
 # TODO: Call this every few minutes
 get_public_ip()
