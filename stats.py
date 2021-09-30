@@ -7,6 +7,7 @@ import sys
 import io
 import os
 import time
+import json
 import subprocess
 import digitalio
 import board
@@ -80,7 +81,7 @@ public_ip = 'No internet!'
 def get_public_ip():
     global public_ip
     try:
-        public_ip = requests.get('https://api.kubesail.com/whatsmyip', timeout=3).content.decode("utf-8")
+        public_ip = json.loads(requests.get('https://api.kubesail.com/whatsmyip', timeout=3).content.decode("utf-8")).ip
     except:
         public_ip = 'No internet!'
 
@@ -111,7 +112,7 @@ def draw_screen():
     y = 0
     #draw.text((x, y), IP, font=font, fill="#FFFFFF")
 
-    cpuChart = requests.get(prometheusPngUrl + '?g0.expr=avg(rate(node_cpu_seconds_total%7Bmode%3D%22user%22%7D%5B5m%5D))&from=-30m&width=250&height=50&hideLegend= true&hideYAxis=true&hideXAxis=true&yDivisors=1&margin=0&hideGrid=true&graphOnly=true')
+    cpuChart = requests.get(prometheusPngUrl + '?g0.expr=avg(rate(node_cpu_seconds_total%7Bmode%3D%22user%22%7D%5B5m%5D))&from=-30m&width=250&height=50&hideLegend=true&hideYAxis=true&hideXAxis=true&yDivisors=1&margin=0&hideGrid=true&graphOnly=true')
     cpu = Image.open(io.BytesIO(cpuChart.content)).convert('RGB')
     y += fontsmall.getsize(CPU)[1]
     image.paste(cpu, (-10, 20))
