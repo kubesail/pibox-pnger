@@ -80,12 +80,13 @@ public_ip = 'No internet!'
 
 def get_public_ip():
     global public_ip
-    print("Fetching public IP")
     try:
-        public_ip = json.loads(requests.get('https://api.kubesail.com/whatsmyip', timeout=3).content.decode("utf-8")).ip
+        data = json.loads(requests.get('https://api.kubesail.com/whatsmyip', timeout=3).content.decode("utf-8"))
+        public_ip = str(data['ip'])
     except:
         public_ip = 'No internet!'
         print("get_public_ip error:", sys.exc_info()[0])
+    print("Fetched public IP: ", public_ip)
 
 # TODO: Call this every few minutes
 get_public_ip()
