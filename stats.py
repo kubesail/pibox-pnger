@@ -3,6 +3,7 @@
 
 # -*- coding: utf-8 -*-
 
+import io
 import time
 import subprocess
 import digitalio
@@ -102,14 +103,16 @@ while True:
     
     y = 0
     #draw.text((x, y), IP, font=font, fill="#FFFFFF")
-    
-    cpu = Image.open("cpu.png").convert('RGB')
+   
+    cpuChart = requests.get('http://localhost:8080?g0.expr=avg(rate(node_cpu_seconds_total%7Bmode%3D%22user%22%7D%5B5m%5D))&from=-30m&width=250&height=50&hideLegend= true&hideYAxis=true&hideXAxis=true&yDivisors=1&margin=0&hideGrid=true&graphOnly=true')
+    cpu = Image.open(io.BytesIO(cpuChart.content)).convert('RGB')
     y += fontsmall.getsize(CPU)[1]
     image.paste(cpu, (-10, 20))
-    draw.text((0, 10), CPU, font=fontsmall, fill="#FFFF00")
+    draw.text((0, 10), "CPU " + CPU, font=fontsmall, fill="#FFFF00")
     y += 80
 
-    mem = Image.open("mem.png").convert('RGB')
+    memChart = requests.get('http://localhost:8080?g0.expr=%28avg_over_time%28node_memory_MemFree_bytes%5B5m%5D%29%20%2F%20avg_over_time%28node_memory_MemTotal_bytes%5B5m%5D%29%29%20%2A%20100&from=-30m&width=250&height=50&hideLegend=true&hideYAxis=true&hideXAxis=true&yDivisors=1&margin=0&hideGrid=true&graphOnly=true')
+    mem = Image.open(io.BytesIO(memChart.content)).convert('RGB')
     y += fontsmall.getsize(MemUsage)[1]
     image.paste(mem, (-10, 90))
     draw.text((0, 80), MemUsage, font=fontsmall, fill="#00FF00")
@@ -126,5 +129,5 @@ while True:
 
     # Display image.
     disp.image(image, rotation, 0,0)
-    time.sleep(1)
+    time.sleep(2)
 
