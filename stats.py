@@ -78,7 +78,7 @@ def get_public_ip():
     try:
         public_ip = requests.get('https://api.kubesail.com/whatsmyip', timeout=3).content.decode("utf-8")
     except:
-        public_ip = ''
+        public_ip = 'No internet!'
 
 # TODO: Call this every few minutes
 get_public_ip()
