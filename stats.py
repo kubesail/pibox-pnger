@@ -19,7 +19,7 @@ import adafruit_rgb_display.rgb as rgb
 prometheusPngUrl = os.environ.get('PROMETHEUS_PNG_URL') or "http://localhost:8080"
 
 # Configuration for CS and DC pins (these are FeatherWing defaults on M0/M4):
-cs_pin = digitalio.DigitalInOut(board.CE1)
+cs_pin = digitalio.DigitalInOut(board.CE1 if os.environ.get('USE_LEGACY_PIN') else board.CE0)
 dc_pin = digitalio.DigitalInOut(board.D25)
 reset_pin = None
 
